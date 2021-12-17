@@ -35,7 +35,7 @@ class EwaStructureTest {
 
     EwaStructureTest() {
         try {
-            classpath = ClassPath.from(EwaStructureTest.class.getClassLoader());
+            classpath = ClassPath.from(/*Your main Application Class*/.class.getClassLoader());
         } catch (IOException e) {
             classpath = null;
             e.printStackTrace();
