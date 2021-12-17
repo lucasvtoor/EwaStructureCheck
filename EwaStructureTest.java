@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.persistence.*;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,13 +23,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 
 @SpringBootTest
-class FullstackedApplication {
-    private static final String CONTROLLER_PACKAGE = "REPLACE THIS WITH THE SOURCE PATH OF YOUR CONTROLLER PACKAGE";
-    private static final String MODEL_PACKAGE = "REPLACE THIS WITH THE SOURCE PATH OF YOUR CONTROLLER PACKAGE";
-    private static final String REPOSITORY_PACKAGE = "com.fullstacked.Fullstacked.Package";
+class FullstackedApplicationTests {
+    private static final String CONTROLLER_PACKAGE = "com.fullstacked.Fullstacked.Controller";
+    private static final String MODEL_PACKAGE = "com.fullstacked.Fullstacked.Models";
+    private static final String REPOSITORY_PACKAGE = "com.fullstacked.Fullstacked.Repositories";
     ClassPath classpath;
 
-    FullstackedApplication() {
+    FullstackedApplicationTests() {
         try {
             classpath = ClassPath.from(FullstackedApplication.class.getClassLoader());
             classpath.getTopLevelClasses(MODEL_PACKAGE).forEach(System.out::println);
@@ -96,7 +96,7 @@ class FullstackedApplication {
 
             }
             if (!checkClass) {
-                System.err.printf("%s is not Annotated as a required annotation, please do or move it out of Models%n", aClass.getSimpleName());
+                System.err.printf("%s is not Annotated as a required annotation, please do so or move it out of %s.%n", aClass.getSimpleName(),packageName);
                 hitError = true;
             }
         }
@@ -194,6 +194,43 @@ class FullstackedApplication {
             }
         });
         assertFalse(hasError.get());
+    }
+
+
+    /**
+     * @author Ruben Wolterbeek & Lucas van Toorenburg
+     * 
+     * This test broke as hell, if anyone has a fix send a pull request.
+     */
+
+    @Test
+    public void everyPrivateFieldInModelHasAGetterAndSetter(){
+        AtomicBoolean error = new AtomicBoolean(false);
+        Set<ClassPath.ClassInfo> classInfos = classpath.getTopLevelClasses(MODEL_PACKAGE);
+        classInfos.forEach((item) -> {
+            Class aClass = item.load();
+            Arrays.stream(aClass.getDeclaredFields()).forEach((field -> {
+                if(Modifier.isFinal(field.getModifiers())){
+                    return;
+                }
+                if(Modifier.isPrivate(field.getModifiers())){
+                    String fieldName =  field.getName();
+                    String name = fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+                    String setter = "set"+name;
+                    String getter = "get"+name;
+                    try {
+                        aClass.getMethod(getter);
+                        aClass.getMethod(setter);
+                    } catch (NoSuchMethodException e) {
+                        System.out.println(setter);
+                        System.out.println(getter);
+                        System.out.printf("field %s.%s lacks a getter or setter or both.%n",aClass.getSimpleName(),fieldName);
+                        error.set(true);
+                    }
+                }
+            }));
+        });
+        assertFalse(error.get());
     }
 
 
