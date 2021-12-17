@@ -1,17 +1,18 @@
+package com.fullstacked.Fullstacked;
+
 import com.google.common.reflect.ClassPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.stereotype.Controller;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.persistence.Entity;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -22,18 +23,16 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 
 @SpringBootTest
-/**
- * @author Lucas van Toorenburg
- */
-class EwaStructureTest {
+class FullstackedApplication {
     private static final String CONTROLLER_PACKAGE = "REPLACE THIS WITH THE SOURCE PATH OF YOUR CONTROLLER PACKAGE";
     private static final String MODEL_PACKAGE = "REPLACE THIS WITH THE SOURCE PATH OF YOUR CONTROLLER PACKAGE";
-    private static final String REPOSITORY_PACKAGE = "REPLACE THIS WITH THE SOURCE PATH OF YOUR CONTROLLER PACKAGE";
+    private static final String REPOSITORY_PACKAGE = "com.fullstacked.Fullstacked.Package";
     ClassPath classpath;
 
-    EwaStructureTest() {
+    FullstackedApplication() {
         try {
-            classpath = ClassPath.from(/*Your main Application Class*/.class.getClassLoader());
+            classpath = ClassPath.from(FullstackedApplication.class.getClassLoader());
+            classpath.getTopLevelClasses(MODEL_PACKAGE).forEach(System.out::println);
         } catch (IOException e) {
             classpath = null;
             e.printStackTrace();
@@ -50,48 +49,58 @@ class EwaStructureTest {
 
     @Test
     void allModelsCorrectlyAnnotatedWithModel() {
-        assertEquals(false, abstractMethod(MODEL_PACKAGE, (model) -> model.getSimpleName().equals("Model"),
-                Entity.class));
+        assertEquals(false, abstractMethod(MODEL_PACKAGE, (i) -> false,false,
+                Entity.class, Embeddable.class,MappedSuperclass.class));
 
     }
 
     @Test
     void allControllersCorrectlyAnnotatedWithController() {
-        assertEquals(false, abstractMethod(CONTROLLER_PACKAGE, (i) -> false, Controller.class));
-        //Replace with RestController if you use that Annotation
+        assertEquals(false, abstractMethod(CONTROLLER_PACKAGE, (i) -> false,false, Controller.class, RestController.class));
 
     }
 
     @Test
     void allRepositoriesCorrectlyAnnotatedWithRepository() {
-        assertEquals(false, abstractMethod(REPOSITORY_PACKAGE, (i) -> false, Repository.class));
+        assertEquals(false, abstractMethod(REPOSITORY_PACKAGE, (i) -> false,false, Repository.class));
 
     }
 
 
+
     /**
-     * @author Lucas van Toorenburg
+     * @author Lucas van Toorenburg & Ruben Wolterbeek.
      * @param packageName This should be one of your constants.
      * @param edgeCase  This is a Function that you use to exclude a class from the check
-     * @param annotation  This is the annotation the test should check for
+     * @param ignoreInterface boolean that dictates if you want to include interfaces in the check.
+     * @param annotations  This is the approved list of annotations the test should check for.
      * @return
      */
-    public boolean abstractMethod(String packageName, Function<Class, Boolean> edgeCase, Class annotation) {
+    public boolean abstractMethod(String packageName, Function<Class, Boolean> edgeCase, boolean ignoreInterface, Class ...annotations) {
         boolean hitError = false;
         Set<ClassPath.ClassInfo> classInfos = classpath.getTopLevelClasses(packageName);
         for (ClassPath.ClassInfo item : classInfos) {
             Class aClass = item.load();
+            if(aClass.isInterface() && ignoreInterface){
+                continue;
+            }
+
             if (edgeCase.apply(aClass)) {
                 continue;
             }
-            Annotation e = aClass.getAnnotation(annotation);
-            if (Objects.isNull(e)) {
+            boolean checkClass = false;
+            for(Class a: annotations){
+                if(Objects.nonNull(aClass.getAnnotation(a))){
+                    checkClass = true;
+                }
+
+            }
+            if (!checkClass) {
+                System.err.printf("%s is not Annotated as a required annotation, please do or move it out of Models%n", aClass.getSimpleName());
                 hitError = true;
-                System.err.printf("%s is not Annotated as a %s, please do or move it out of %s %n", aClass.getSimpleName(), annotation.getSimpleName(), (annotation.getSimpleName() + "s") );
             }
         }
         return hitError;
-
     }
 
     /**
