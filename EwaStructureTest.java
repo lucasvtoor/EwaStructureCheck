@@ -1,5 +1,3 @@
-package com.fullstacked.Fullstacked;
-
 import com.google.common.reflect.ClassPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -89,7 +87,7 @@ class EwaStructureTest {
             Annotation e = aClass.getAnnotation(annotation);
             if (Objects.isNull(e)) {
                 hitError = true;
-                System.err.printf("%s is not Annotated as an %s, please do or move it out of Models%n", aClass.getSimpleName(), annotation.getSimpleName());
+                System.err.printf("%s is not Annotated as a %s, please do or move it out of %s %n", aClass.getSimpleName(), annotation.getSimpleName(), (annotation.getSimpleName() + "s") );
             }
         }
         return hitError;
