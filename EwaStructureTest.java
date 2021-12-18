@@ -24,9 +24,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @SpringBootTest
 class FullstackedApplicationTests {
-    private static final String CONTROLLER_PACKAGE = "com.fullstacked.Fullstacked.Controller";
-    private static final String MODEL_PACKAGE = "com.fullstacked.Fullstacked.Models";
-    private static final String REPOSITORY_PACKAGE = "com.fullstacked.Fullstacked.Repositories";
+    private static final String CONTROLLER_PACKAGE  = "REPLACE THIS WITH THE SOURCE PATH OF YOUR CONTROLLER PACKAGE";
+    private static final String MODEL_PACKAGE       = "REPLACE THIS WITH THE SOURCE PATH OF YOUR CONTROLLER PACKAGE";
+    private static final String REPOSITORY_PACKAGE  = "REPLACE THIS WITH THE SOURCE PATH OF YOUR CONTROLLER PACKAGE";
+    private static final String DATASOURCE_URL      = "REPLACE THIS WITH THE INTENDED DATABASE HOST";
+    private static final String DATASOURCE_USERNAME = "REPLACE THIS WITH THE INTENDED DATABASE USER";
+    private static final String DATASOURCE_PASSWORD = "REPLACE THIS WITH THE INTENDED DATABASE PASSWORD";
     ClassPath classpath;
 
     FullstackedApplicationTests() {
@@ -49,39 +52,38 @@ class FullstackedApplicationTests {
 
     @Test
     void allModelsCorrectlyAnnotatedWithModel() {
-        assertEquals(false, abstractMethod(MODEL_PACKAGE, (i) -> false,false,
-                Entity.class, Embeddable.class,MappedSuperclass.class));
+        assertEquals(false, abstractMethod(MODEL_PACKAGE, (i) -> false, false,
+                Entity.class, Embeddable.class, MappedSuperclass.class));
 
     }
 
     @Test
     void allControllersCorrectlyAnnotatedWithController() {
-        assertEquals(false, abstractMethod(CONTROLLER_PACKAGE, (i) -> false,false, Controller.class, RestController.class));
+        assertEquals(false, abstractMethod(CONTROLLER_PACKAGE, (i) -> false, false, Controller.class, RestController.class));
 
     }
 
     @Test
     void allRepositoriesCorrectlyAnnotatedWithRepository() {
-        assertEquals(false, abstractMethod(REPOSITORY_PACKAGE, (i) -> false,false, Repository.class));
+        assertEquals(false, abstractMethod(REPOSITORY_PACKAGE, (i) -> false, false, Repository.class));
 
     }
 
 
-
     /**
-     * @author Lucas van Toorenburg & Ruben Wolterbeek.
-     * @param packageName This should be one of your constants.
-     * @param edgeCase  This is a Function that you use to exclude a class from the check
+     * @param packageName     This should be one of your constants.
+     * @param edgeCase        This is a Function that you use to exclude a class from the check
      * @param ignoreInterface boolean that dictates if you want to include interfaces in the check.
-     * @param annotations  This is the approved list of annotations the test should check for.
+     * @param annotations     This is the approved list of annotations the test should check for.
      * @return
+     * @author Lucas van Toorenburg & Ruben Wolterbeek.
      */
-    public boolean abstractMethod(String packageName, Function<Class, Boolean> edgeCase, boolean ignoreInterface, Class ...annotations) {
+    public boolean abstractMethod(String packageName, Function<Class, Boolean> edgeCase, boolean ignoreInterface, Class... annotations) {
         boolean hitError = false;
         Set<ClassPath.ClassInfo> classInfos = classpath.getTopLevelClasses(packageName);
         for (ClassPath.ClassInfo item : classInfos) {
             Class aClass = item.load();
-            if(aClass.isInterface() && ignoreInterface){
+            if (aClass.isInterface() && ignoreInterface) {
                 continue;
             }
 
@@ -89,14 +91,14 @@ class FullstackedApplicationTests {
                 continue;
             }
             boolean checkClass = false;
-            for(Class a: annotations){
-                if(Objects.nonNull(aClass.getAnnotation(a))){
+            for (Class a : annotations) {
+                if (Objects.nonNull(aClass.getAnnotation(a))) {
                     checkClass = true;
                 }
 
             }
             if (!checkClass) {
-                System.err.printf("%s is not Annotated as a required annotation, please do so or move it out of %s.%n", aClass.getSimpleName(),packageName);
+                System.err.printf("%s is not Annotated as a required annotation, please do so or move it out of %s.%n", aClass.getSimpleName(), packageName);
                 hitError = true;
             }
         }
@@ -135,6 +137,7 @@ class FullstackedApplicationTests {
         assertFalse(hasError.get());
 
     }
+
     @Test
     public void assertManyToOne() {
         AtomicBoolean hasError = new AtomicBoolean(false);
@@ -143,7 +146,7 @@ class FullstackedApplicationTests {
             Class model = item.load();
             for (Field field : model.getFields()) {
                 if (field.getAnnotation(ManyToOne.class) != null) {
-                   Class other = field.getType();
+                    Class other = field.getType();
                     boolean otherClassHasMatchingOneToMany = false;
                     for (Field field2 : other.getFields()) {
                         if (field2.getAnnotation(OneToMany.class) != null) {
@@ -165,6 +168,7 @@ class FullstackedApplicationTests {
         assertFalse(hasError.get());
 
     }
+
     @Test
     public void assertManyToMany() {
         AtomicBoolean hasError = new AtomicBoolean(false);
@@ -196,35 +200,33 @@ class FullstackedApplicationTests {
         assertFalse(hasError.get());
     }
 
-  /**
+    /**
      * @author Ruben Wolterbeek & Lucas van Toorenburg
-     *
-     * 
      */
 
     @Test
-    public void everyPrivateFieldInModelHasAGetterAndSetter(){
+    public void everyPrivateFieldInModelHasAGetterAndSetter() {
         AtomicBoolean error = new AtomicBoolean(false);
         Set<ClassPath.ClassInfo> classInfos = classpath.getTopLevelClasses(MODEL_PACKAGE);
         classInfos.forEach((item) -> {
             Class aClass = item.load();
             Arrays.stream(aClass.getDeclaredFields()).forEach((field -> {
-                if(Modifier.isFinal(field.getModifiers())){
+                if (Modifier.isFinal(field.getModifiers())) {
                     return;
                 }
-                if(Modifier.isPrivate(field.getModifiers())){
-                    String fieldName =  field.getName();
+                if (Modifier.isPrivate(field.getModifiers())) {
+                    String fieldName = field.getName();
                     String name = fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
-                    String setter = "set"+name;
-                    String getter = "get"+name;
+                    String setter = "set" + name;
+                    String getter = "get" + name;
                     try {
                         aClass.getDeclaredMethod(getter);
-                        aClass.getDeclaredMethod(setter,field.getType());
+                        aClass.getDeclaredMethod(setter, field.getType());
                     } catch (NoSuchMethodException e) {
                         System.out.println(setter);
                         System.out.println(getter);
                         e.printStackTrace();
-                        System.out.printf("field %s.%s lacks a getter or setter or both.%n",aClass.getSimpleName(),fieldName);
+                        System.out.printf("field %s.%s lacks a getter or setter or both.%n", aClass.getSimpleName(), fieldName);
                         error.set(true);
                     }
                 }
