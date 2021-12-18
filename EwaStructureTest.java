@@ -196,11 +196,10 @@ class FullstackedApplicationTests {
         assertFalse(hasError.get());
     }
 
-
-    /**
+  /**
      * @author Ruben Wolterbeek & Lucas van Toorenburg
+     *
      * 
-     * This test broke as hell, if anyone has a fix send a pull request.
      */
 
     @Test
@@ -219,11 +218,12 @@ class FullstackedApplicationTests {
                     String setter = "set"+name;
                     String getter = "get"+name;
                     try {
-                        aClass.getMethod(getter);
-                        aClass.getMethod(setter);
+                        aClass.getDeclaredMethod(getter);
+                        aClass.getDeclaredMethod(setter,field.getType());
                     } catch (NoSuchMethodException e) {
                         System.out.println(setter);
                         System.out.println(getter);
+                        e.printStackTrace();
                         System.out.printf("field %s.%s lacks a getter or setter or both.%n",aClass.getSimpleName(),fieldName);
                         error.set(true);
                     }
