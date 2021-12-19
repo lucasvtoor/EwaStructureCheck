@@ -25,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @SpringBootTest
 class FullstackedApplicationTests {
     private static final String CONTROLLER_PACKAGE  = "REPLACE THIS WITH THE SOURCE PATH OF YOUR CONTROLLER PACKAGE";
-    private static final String MODEL_PACKAGE       = "REPLACE THIS WITH THE SOURCE PATH OF YOUR CONTROLLER PACKAGE";
-    private static final String REPOSITORY_PACKAGE  = "REPLACE THIS WITH THE SOURCE PATH OF YOUR CONTROLLER PACKAGE";
+    private static final String MODEL_PACKAGE       = "REPLACE THIS WITH THE SOURCE PATH OF YOUR MODEL PACKAGE";
+    private static final String REPOSITORY_PACKAGE  = "REPLACE THIS WITH THE SOURCE PATH OF YOUR REPOSITORY PACKAGE";
     private static final String DATASOURCE_URL      = "REPLACE THIS WITH THE INTENDED DATABASE HOST";
     private static final String DATASOURCE_USERNAME = "REPLACE THIS WITH THE INTENDED DATABASE USER";
     private static final String DATASOURCE_PASSWORD = "REPLACE THIS WITH THE INTENDED DATABASE PASSWORD";
